@@ -27,8 +27,8 @@
 #include <addons/RTDBHelper.h>
 
 /* 1. Define the WiFi credentials */
-#define WIFI_SSID "piro-sala-2g"
-#define WIFI_PASSWORD "f90c95s19"
+#define WIFI_SSID "ewerton123"
+#define WIFI_PASSWORD "12345678"
 
 /* 2. If work with RTDB, define the RTDB URL and database secret */
 #define DATABASE_URL "https://boostrap-a9db8-default-rtdb.firebaseio.com/"
@@ -89,7 +89,7 @@ void loop()
     {
         dataMillis = millis();
         Serial.printf("Set int... %s\n", Firebase.setInt(fbdo, "/test/int", count++) ? "ok" : fbdo.errorReason().c_str());
-        Firebase.setInt(fbdo, "/ADC", analogRead(0));
+        Firebase.setInt(fbdo, "/ADC", analogRead(0)); // 0 é o número da entrada
         Firebase.getInt(fbdo, "/LED");
         Serial.print("LED = ");
         Serial.println(fbdo.intData());
