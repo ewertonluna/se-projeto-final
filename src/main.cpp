@@ -23,6 +23,14 @@
 #include <FirebaseESP8266.h>
 #endif
 
+#include <Arduino.h>
+#include <SoftwareSerial.h>
+//Pinos de comunicacao serial com a ST Núcleo
+#define Pin_ST_NUCLEO_RX    5  //Pino D1 da placa Node MCU
+#define Pin_ST_NUCLEO_TX    4  //Pino D2 da placa Node MCU
+SoftwareSerial SSerial(Pin_ST_NUCLEO_RX, Pin_ST_NUCLEO_TX);
+
+
 // Provide the RTDB payload printing info and other helper functions.
 #include <addons/RTDBHelper.h>
 
@@ -49,52 +57,28 @@ int count = 0;
 void setup()
 {
 
-    Serial.begin(115200);
-    pinMode(LED_BUILTIN,OUTPUT);
+     // Open serial communications and wait for port to open:
+  Serial.begin(115200);
+  SSerial.begin(115200);
 
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    Serial.print("Connecting to Wi-Fi");
-    while (WiFi.status() != WL_CONNECTED)
-    {
-        Serial.print(".");
-        delay(300);
-    }
-    Serial.println();
-    Serial.print("Connected with IP: ");
-    Serial.println(WiFi.localIP());
-    Serial.println();
+  Serial.println("Serial by hardware!");
 
-    Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
+  // set the data rate for the SoftwareSerial port
+  SSerial.println("Serial by software!");
 
-    /* Assign the certificate file (optional) */
-    // config.cert.file = "/cert.cer";
-    // config.cert.file_storage = StorageType::FLASH;
-
-    /* Assign the database URL and database secret(required) */
-    config.database_url = DATABASE_URL;
-    config.signer.tokens.legacy_token = DATABASE_SECRET;
-
-    Firebase.reconnectWiFi(true);
-
-    /* Initialize the library with the Firebase authen and config */
-    Firebase.begin(&config, &auth);
-
-    // Or use legacy authenticate method
-    // Firebase.begin(DATABASE_URL, DATABASE_SECRET);
 }
 
 void loop()
 {
-    if (millis() - dataMillis > 1000)
-    {
-        dataMillis = millis();
-        Serial.printf("Set int... %s\n", Firebase.setInt(fbdo, "/test/int", count++) ? "ok" : fbdo.errorReason().c_str());
-        Firebase.setInt(fbdo, "/ADC", analogRead(0)); // 0 é o número da entrada
-        Firebase.getInt(fbdo, "/LED");
-        Serial.print("LED = ");
-        Serial.println(fbdo.intData());
-        digitalWrite(BUILTIN_LED,!fbdo.intData());
+//IMPORTANTE: O codigo abaixo é apenas para demonstração. 
+  // Este codigo precisará ser removidou ou modificado para o projeto final!
+  if (SSerial.available()){
+    Serial.write(SSerial.read());
+    delay(1);
+  }
+  if (Serial.available()){
+    SSerial.write(Serial.read());
+    delay(1);
+  }
 
-
-    }
 }
