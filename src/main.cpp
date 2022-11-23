@@ -25,22 +25,16 @@
 
 #include <Arduino.h>
 #include <SoftwareSerial.h>
+#include <addons/RTDBHelper.h>
 //Pinos de comunicacao serial com a ST Núcleo
 #define Pin_ST_NUCLEO_RX    5  //Pino D1 da placa Node MCU
 #define Pin_ST_NUCLEO_TX    4  //Pino D2 da placa Node MCU
-SoftwareSerial SSerial(Pin_ST_NUCLEO_RX, Pin_ST_NUCLEO_TX);
-
-
-// Provide the RTDB payload printing info and other helper functions.
-#include <addons/RTDBHelper.h>
-
-/* 1. Define the WiFi credentials */
 #define WIFI_SSID "ewerton123"
 #define WIFI_PASSWORD "12345678"
 
-/* 2. If work with RTDB, define the RTDB URL and database secret */
 #define DATABASE_URL "https://boostrap-a9db8-default-rtdb.firebaseio.com/"
 #define DATABASE_SECRET "upmptRlESgxHImqcPdUQKIKY6eIPMtvRb8H1Fq90"
+SoftwareSerial SSerial(Pin_ST_NUCLEO_RX, Pin_ST_NUCLEO_TX);
 
 /* 3. Define the Firebase Data object */
 FirebaseData fbdo;
