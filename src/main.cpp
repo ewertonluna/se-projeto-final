@@ -122,7 +122,7 @@ void loop()
   if (millis() - dataMillis > 1000) {
         dataMillis = millis();
         Serial.printf("Set int... %s\n", Firebase.setInt(fbdo, "/test/int", count++) ? "ok" : fbdo.errorReason().c_str());
-        Firebase.setInt(fbdo, "/ADC", smokePPM); // 0 é o número da entrada
+        Firebase.setInt(fbdo, "/concentration", smokePPM); // 0 é o número da entrada
         Serial.println(fbdo.intData());
         digitalWrite(BUILTIN_LED,!fbdo.intData());
   }
