@@ -26,7 +26,13 @@
 #include <Arduino.h>
 #include <SoftwareSerial.h>
 #include <addons/RTDBHelper.h>
-//Pinos de comunicacao serial com a ST Núcleo
+#include <MQUnifiedsensor.h>
+#define placa "Arduino UNO"
+#define Voltage_Resolution 5
+#define pin A0 //Analog input 4 of your arduino
+#define type "MQ-2" //MQ2
+#define ADC_Bit_Resolution 10 // For arduino UNO/MEGA/NANO
+#define RatioMQ2CleanAir 4.4  //RS / R0 = 4.4 ppm 
 #define Pin_ST_NUCLEO_RX    5  //Pino D1 da placa Node MCU
 #define Pin_ST_NUCLEO_TX    4  //Pino D2 da placa Node MCU
 #define WIFI_SSID "ewerton123"
@@ -48,6 +54,8 @@ FirebaseConfig config;
 unsigned long dataMillis = 0;
 int count = 0;
 
+MQUnifiedsensor MQ2(placa, Voltage_Resolution, ADC_Bit_Resolution, pin, type);
+
 void setup()
 {
 
@@ -56,23 +64,45 @@ void setup()
   SSerial.begin(115200);
 
   Serial.println("Serial by hardware!");
+  MQ2.setRegressionMethod(1); //_PPM =  a*ratio^b
+  MQ2.setA(60000000000); MQ2.setB(-14.01); // Configure the equation to to calculate CH4 concentration
 
+  MQ2.init();
   // set the data rate for the SoftwareSerial port
   SSerial.println("Serial by software!");
-
+  Serial.print("Calibrating please wait.");
+  float calcR0 = 0;
+  for(int i = 1; i<=10; i ++)
+  {
+    MQ2.update(); // Update data, the arduino will read the voltage from the analog pin
+    calcR0 += MQ2.calibrate(RatioMQ2CleanAir);
+    Serial.print(".");
+  }
+  MQ2.setR0(calcR0/10);
+  Serial.println("  done!.");
+  
+  if(isinf(calcR0)) {Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply"); while(1);}
+  if(calcR0 == 0){Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply"); while(1);}
+  /*****************************  MQ CAlibration ********************************************/ 
+  MQ2.serialDebug(true);
 }
 
 void loop()
 {
 //IMPORTANTE: O codigo abaixo é apenas para demonstração. 
   // Este codigo precisará ser removidou ou modificado para o projeto final!
-  if (SSerial.available()){
-    Serial.write(SSerial.read());
-    delay(1);
-  }
-  if (Serial.available()){
-    SSerial.write(Serial.read());
-    delay(1);
-  }
+//   if (SSerial.available()){
+//     Serial.write(SSerial.read());
+//     delay(1);
+//   }
+//   if (Serial.available()){
+//     SSerial.write(Serial.read());
+//     delay(1);
+//   }
+  MQ2.update();
+  float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
+  if(smokePPM > 120) {Serial.println("Warning: High concentrations of smoke detected");}
+  MQ2.serialDebug(); // Will print the table on the serial port
+  delay(400);  
 
 }
