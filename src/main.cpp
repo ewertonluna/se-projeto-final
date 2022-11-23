@@ -35,6 +35,7 @@
 #define RatioMQ2CleanAir 4.4  //RS / R0 = 4.4 ppm 
 #define Pin_ST_NUCLEO_RX    5  //Pino D1 da placa Node MCU
 #define Pin_ST_NUCLEO_TX    4  //Pino D2 da placa Node MCU
+
 #define WIFI_SSID "ewerton123"
 #define WIFI_PASSWORD "12345678"
 
@@ -59,18 +60,39 @@ MQUnifiedsensor MQ2(placa, Voltage_Resolution, ADC_Bit_Resolution, pin, type);
 void setup()
 {
 
-     // Open serial communications and wait for port to open:
+  // Open serial communications and wait for port to open:
   Serial.begin(115200);
   SSerial.begin(115200);
-
   Serial.println("Serial by hardware!");
+  pinMode(LED_BUILTIN,OUTPUT);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+  	Serial.print(".");
+  	delay(300);
+  }
+  Serial.println();
+  Serial.print("Connected with IP: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
+
+  Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
+  config.database_url = DATABASE_URL;
+  config.signer.tokens.legacy_token = DATABASE_SECRET;
+
+  Firebase.reconnectWiFi(true);
+
+  Firebase.begin(&config, &auth);
+
   MQ2.setRegressionMethod(1); //_PPM =  a*ratio^b
   MQ2.setA(60000000000); MQ2.setB(-14.01); // Configure the equation to to calculate CH4 concentration
-
   MQ2.init();
-  // set the data rate for the SoftwareSerial port
+
   SSerial.println("Serial by software!");
   Serial.print("Calibrating please wait.");
+
   float calcR0 = 0;
   for(int i = 1; i<=10; i ++)
   {
@@ -79,7 +101,7 @@ void setup()
     Serial.print(".");
   }
   MQ2.setR0(calcR0/10);
-  Serial.println("  done!.");
+  Serial.println("done!");
   
   if(isinf(calcR0)) {Serial.println("Warning: Conection issue, R0 is infinite (Open circuit detected) please check your wiring and supply"); while(1);}
   if(calcR0 == 0){Serial.println("Warning: Conection issue found, R0 is zero (Analog pin shorts to ground) please check your wiring and supply"); while(1);}
@@ -89,16 +111,6 @@ void setup()
 
 void loop()
 {
-//IMPORTANTE: O codigo abaixo é apenas para demonstração. 
-  // Este codigo precisará ser removidou ou modificado para o projeto final!
-//   if (SSerial.available()){
-//     Serial.write(SSerial.read());
-//     delay(1);
-//   }
-//   if (Serial.available()){
-//     SSerial.write(Serial.read());
-//     delay(1);
-//   }
   MQ2.update();
   float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
   if(smokePPM > 120) {
@@ -107,4 +119,11 @@ void loop()
   MQ2.serialDebug(); // Will print the table on the serial port
   delay(400);  
 
+  if (millis() - dataMillis > 1000) {
+        dataMillis = millis();
+        Serial.printf("Set int... %s\n", Firebase.setInt(fbdo, "/test/int", count++) ? "ok" : fbdo.errorReason().c_str());
+        Firebase.setInt(fbdo, "/ADC", smokePPM); // 0 é o número da entrada
+        Serial.println(fbdo.intData());
+        digitalWrite(BUILTIN_LED,!fbdo.intData());
+  }
 }
