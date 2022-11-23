@@ -101,7 +101,9 @@ void loop()
 //   }
   MQ2.update();
   float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
-  if(smokePPM > 120) {Serial.println("Warning: High concentrations of smoke detected");}
+  if(smokePPM > 120) {
+	Serial.println("Warning: High concentrations of smoke detected");
+  }
   MQ2.serialDebug(); // Will print the table on the serial port
   delay(400);  
 
