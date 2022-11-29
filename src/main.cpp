@@ -111,17 +111,20 @@ void setup()
 
 void loop()
 {
-  MQ2.update();
-  float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
-  if(smokePPM > 120) {
-	Serial.println("Warning: High concentrations of smoke detected");
-  }
-  MQ2.serialDebug(); // Will print the table on the serial port
-  delay(400);  
+	MQ2.update();
+	float smokePPM = MQ2.readSensor(); // Sensor will read PPM concentration using the model, a and b values set previously or from the setup
+	if(smokePPM > 100) {
+		Serial.println("Warning: High concentrations of smoke detected");
+		SSerial.write("1");
+	} else {
+		SSerial.write("0");
+	}
+	MQ2.serialDebug(); // Prints the table
+	delay(400);  
 
   if (millis() - dataMillis > 1000) {
         dataMillis = millis();
-        Serial.printf("Set int... %s\n", Firebase.setInt(fbdo, "/test/int", count++) ? "ok" : fbdo.errorReason().c_str());
+        Serial.printf("Set int... %s\n", Firebase.setInt(fbdo, "/test/int", 0) ? "ok" : fbdo.errorReason().c_str());
         Firebase.setInt(fbdo, "/concentration", smokePPM); // 0 é o número da entrada
         Serial.println(fbdo.intData());
         digitalWrite(BUILTIN_LED,!fbdo.intData());
